@@ -5,6 +5,8 @@
 
 test.py
 config.json
+permanent_whitelist.txt
+dig_record.txt
 
 # User-specific files
 *.rsuser

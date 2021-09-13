@@ -4,6 +4,10 @@ import hashlib
 from random import random
 from time import sleep
 
+from typing import List
+
+from data_class import *
+
 class TiebaApi(object):
 
     def __init__(self, BDUSS, STOKEN, tieba_name):
@@ -83,8 +87,9 @@ class TiebaApi(object):
         参数：
             user_name: string 昵称或用户名
         返回值：
-            user_id: 用户名
+            username: 用户名
             nickname: 用户昵称
+            user_id: 用户 ID
             portrait: 用户头像portrait值
         """
         params = {'un': user_name}
@@ -154,9 +159,9 @@ class TiebaApi(object):
             return False, str(err)
 
         return True, ""
+
     def unban_id(self,id):
         username, nickname, user_id, portrait = self._get_user_info(id)
-
         payload = {'fn': self.tieba_name,
                    'fid': self.fid,
                    'block_un': username,
@@ -167,7 +172,7 @@ class TiebaApi(object):
 
         try:
             res = self.web.post(
-                "https://tieba.baidu.com/mo/q/bawublockclear", data=payload, timeout=(3, 10))
+                "https://tieba.baidu.com/mo/q/bawublockclear", data=self._app_sign(payload), timeout=(3, 10))
 
             if res.status_code != 200:
                 raise ValueError("status code is not 200")
@@ -178,6 +183,149 @@ class TiebaApi(object):
 
         except Exception as err:
             print(str(err))
-            return False
+            return False, str(err)
 
-        return True
+        return True, ""
+
+    def get_threads(self, pn=1, rn=30):
+        """
+        获取首页帖子。
+        return:
+            List[Thread]
+        """
+        payload = {'_client_version': '12.8.2.1',
+                    'kw': self.tieba_name,
+                    'pn': pn,
+                    'rn': rn
+                    }
+        try:
+            res = self.app.post("http://c.tieba.baidu.com/c/f/frs/page", data=self._app_sign(payload), timeout=(3, 10))
+            if res.status_code != 200:
+                raise ValueError("status code is not 200")
+
+            main_json = res.json()
+
+            if int(main_json['error_code']):
+                raise ValueError(main_json['error_msg'])
+            
+            user_dict = {}
+            thread_list = []
+            for user in main_json['user_list']:
+                user_dict[user['id']] = user['name'], user['name_show']
+            for thread_raw in main_json['thread_list']:
+                thread = Thread(thread_raw['tid'],
+                                thread_raw['title'],
+                                thread_raw['create_time'],
+                                thread_raw['last_time_int'],
+                                thread_raw['reply_num'],
+                                user_dict[thread_raw['author_id']][0],
+                                user_dict[thread_raw['author_id']][1]
+                                )
+                thread_list.append(thread)
+
+            return thread_list
+
+        except Exception as err:
+            print(str(err))
+            return []
+    def get_comments(self,tid,pid,pn=1,rn=30):
+        """
+        获取回复的楼中楼。
+        参数:
+            tid: 帖子的 tid
+            pid: 回复的 pid
+        return:
+            List[Comment]
+        """
+        payload = {'_client_version':'12.8.2.1',
+                   'kz':tid,
+                   'pid':pid,
+                   'pn':pn}
+
+        try:
+            res = self.app.post("http://c.tieba.baidu.com/c/f/pb/floor", data=self._app_sign(payload),timeout=(3,10))
+            
+            if res.status_code != 200:
+                raise ValueError("status code is not 200")
+
+            main_json = res.json()
+            if int(main_json['error_code']):
+                raise ValueError(main_json['error_msg'])
+
+            floor_no = main_json['post']['floor']
+            post_list = []
+            for raw_post in main_json['subpost_list']:
+                post = Post(raw_post['id'],
+                            raw_post['time'],
+                            raw_post['content'],
+                            raw_post['author']['name_show'],
+                            raw_post['author']['name'],
+                            floor_no,
+                            True)
+                post_list.append(post)
+            if pn != 1:
+                return post_list
+            for i in range(2,int(main_json['page']['total_page'])+1):
+                post_list.append(self.get_comments(tid,pid,i))
+            
+            return post_list
+        except Exception as err:
+            print(str(err))
+
+        return []
+
+    def get_posts(self, tid, pn=1, rn=30):
+        """
+        获取帖子的回复
+        参数:
+            tid: 帖子的 tid
+        return：
+            List[Post]
+        """
+        payload = {'_client_version': '12.8.2.1',
+                   'kz': tid,
+                   'pn': pn,
+                   'rn': rn
+                   }
+        #try:
+        res = self.app.post("http://c.tieba.baidu.com/c/f/pb/page",data=self._app_sign(payload),timeout=(3,10))
+            
+        if res.status_code != 200:
+            raise ValueError("status code is not 200")
+
+        main_json = res.json()
+        # print(main_json,"\n\n\n")
+        if int(main_json['error_code']):
+            raise ValueError(main_json['error_msg'])
+
+        post_list = []
+        user_dict = {}
+        for user in main_json['user_list']:
+            if not user.get('portrait',None):
+                continue
+            user_dict[user['id']] = user['name'], user['name_show']
+        for post_raw in main_json['post_list']:
+            post = Post(post_raw['id'],
+                        post_raw['time'],
+                        post_raw['content'],
+                        user_dict[post_raw['author_id']][1],
+                        user_dict[post_raw['author_id']][0],
+                        post_raw['floor'],
+                        False
+                        )
+            post_list.append(post)
+            if int(post_raw['sub_post_number']) > 0:
+                post_list += self.get_comments(tid,post_raw['id'])
+        if pn != 1:
+            return post_list
+
+        page_num = int(main_json['page']['total_page'])
+        if page_num :
+            for i in range(2,page_num+1):
+                post_list += self.get_posts(tid,i)
+        return post_list
+
+        #except Exception as err:
+         #   print("错误，原因："+str(err))
+
+        return []
