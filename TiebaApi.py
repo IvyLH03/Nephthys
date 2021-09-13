@@ -266,7 +266,7 @@ class TiebaApi(object):
             if pn != 1:
                 return post_list
             for i in range(2,int(main_json['page']['total_page'])+1):
-                post_list.append(self.get_comments(tid,pid,i))
+                post_list += (self.get_comments(tid,pid,i))
             
             return post_list
         except Exception as err:

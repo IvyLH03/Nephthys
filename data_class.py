@@ -5,11 +5,22 @@ class Post(object):
 	def __init__(self, pid, reply_time, content, nickname, username, floor_no, is_lzl):
 		self.pid = int(pid)
 		self.reply_time = int(reply_time)
-		self.content = content
+		# self.content = content
 		self.nickname = nickname
 		self.username = username
 		self.floor_no = int(floor_no)
 		self.is_lzl = bool(is_lzl)
+
+		s = ""
+		for i in content:
+			if i['type'] == '2':
+				s += "#(" + i['c'] + ")"
+			elif i['type'] == '3':
+				s += "[图片]"
+			else:
+				s += i['text']
+		self.content = s
+
 	def __str__(self):
 		return "pid:"+str(self.pid)+"\nreply_time:"+str(self.reply_time)+"\ncontent:"+str(self.content)+"\nnickname:"+str(self.nickname)+"\nusername:"+str(self.username)+"\nfloor_no:"+str(self.floor_no)+"\nis_lzl:"+str(self.is_lzl)
 

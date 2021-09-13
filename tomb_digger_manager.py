@@ -3,7 +3,7 @@ from typing import List, Dict
 import os
 import functools
 import time
-
+from operator import attrgetter
 class TombDiggerManager(object):
     def __init__(self):
         self._load_records()
@@ -13,7 +13,7 @@ class TombDiggerManager(object):
         加载白名单和处理记录
         """
         self.permanent_whitelist = []
-        with open("permanent_whitelist.txt","r",encoding="utf-8") as f:
+        with open("permanent_whitelist.txt","+a",encoding="utf-8") as f:
             while True:
                 line = f.readline()
                 if line:
@@ -25,7 +25,7 @@ class TombDiggerManager(object):
                     break
         # 12345(1)12312312312:123123123123
         self.dig_record = {}
-        with open("dig_record.txt","r",encoding="utf-8") as f:
+        with open("dig_record.txt","+a",encoding="utf-8") as f:
             while True:
                 line = f.readline()
                 if line:
@@ -38,6 +38,9 @@ class TombDiggerManager(object):
                     break
 
     def save_records(self):
+        """
+        保存处理记录。
+        """
         with open("permanent_whitelist.txt","w",encoding="utf-8") as f:
             f.truncate()
             f.writelines(self.permanent_whitelist)
@@ -90,15 +93,16 @@ class TombDiggerManager(object):
                     return []
         else:
             self.dig_record[thread.tid] = [False, 0, 0]
-        post_list.sort(key=functools.cmp_to_key(self._post_cmp)) # 从最晚回复到最早回复排序
+        post_list = sorted(post_list, key=attrgetter('reply_time'), reverse=True) # 从最晚回复到最早回复排序
         digged = False
         dig_list = []
         for i in range(len(post_list)-1):
-            if post_list[i].reply_time - post_list[i+1].reply_time > 2678400:
-                digged = True
-                break
             if (not self._is_sealing(post_list[i])) and (not self._is_reporting(post_list[i])) and post_list[i].reply_time > self.dig_record[thread.tid][2]:
                 dig_list.append(post_list[i])
+            if post_list[i].reply_time - post_list[i+1].reply_time > 2678400:
+                print("查找到挖坟")
+                digged = True
+                break
 
         if digged:
             self.dig_record[thread.tid][0] = True

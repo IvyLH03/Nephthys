@@ -9,13 +9,12 @@ class TiebaScout(object):
 
     def regular_checking(self):
         thread_list =  self.tapi.get_threads()
-        print(thread_list)
         dig_list =  []
         for thread in thread_list:
-            print(thread)
+            print(thread.tid, ":", thread.title)
             thread_dig_list = self.tdm.judge_tomb_digging(thread,self.tapi.get_posts(thread.tid))
             if len(thread_dig_list) != 0:
-                dig_list.append(thread, thread_dig_list)
+                dig_list.append((thread, thread_dig_list))
                 print(thread_dig_list)
         return dig_list
 
