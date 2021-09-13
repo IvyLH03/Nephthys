@@ -99,6 +99,8 @@ class TombDiggerManager(object):
         for i in range(len(post_list)-1):
             if (not self._is_sealing(post_list[i])) and (not self._is_reporting(post_list[i])) and post_list[i].reply_time > self.dig_record[thread.tid][2]:
                 dig_list.append(post_list[i])
+            if self._is_sealing(post_list[i]):
+                self.dig_record[thread.tid][2] = post_list[i].reply_time
             if post_list[i].reply_time - post_list[i+1].reply_time > 2678400:
                 print("查找到挖坟")
                 digged = True

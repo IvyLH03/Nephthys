@@ -11,8 +11,10 @@ class TiebaScout(object):
         thread_list =  self.tapi.get_threads()
         dig_list =  []
         for thread in thread_list:
-            print(thread.tid, ":", thread.title)
-            thread_dig_list = self.tdm.judge_tomb_digging(thread,self.tapi.get_posts(thread.tid))
+            if thread.reply_time == self.tdm.dig_record[thread.tid][1]:
+                continue
+            post_list = self.tapi.get_posts(thread.tid)
+            thread_dig_list = self.tdm.judge_tomb_digging(thread,post_list)
             if len(thread_dig_list) != 0:
                 dig_list.append((thread, thread_dig_list))
                 print(thread_dig_list)
@@ -20,6 +22,6 @@ class TiebaScout(object):
 
 
     def update_stats(self):
-        pass
+        self.tdm.save_records()
 
 
