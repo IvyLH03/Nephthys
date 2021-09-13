@@ -57,6 +57,9 @@ class TombDiggerManager(object):
         return False
 
     def _is_reporting(self, post:Post):
+        """
+        检查某回复是否为举报挖坟。
+        """
         return False
 
     def judge_tomb_digging(self,thread: Thread, post_list: List[Post]):
