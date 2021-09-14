@@ -6,6 +6,7 @@ class TiebaScout(object):
     def __init__(self, BDUSS, STOKEN, tieba_name, *args, **kwargs):
         self.tapi = TiebaApi(BDUSS,STOKEN,tieba_name)
         self.tdm = TombDiggerManager()
+        self.illegal_words = []
 
     def regular_checking(self):
         thread_list =  self.tapi.get_threads()

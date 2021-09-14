@@ -11,6 +11,10 @@ class Post(object):
 		self.floor_no = int(floor_no)
 		self.is_lzl = bool(is_lzl)
 
+		if username == "":
+			self.username = nickname
+
+
 		s = ""
 		for i in content:
 			if i['type'] == '2':
@@ -33,6 +37,11 @@ class Thread(object):
 		self.reply_num = int(reply_num)
 		self.username = username
 		self.nickname = nickname
+
+		if username == "":
+			self.username = nickname
+		if title == "":
+			self.title = "无标题"
 
 	def __str__(self):
 		return "tid:"+str(self.tid)+"\ntitle:"+str(self.title)+"\npost_time"+str(self.post_time)+"\nreply_time"+str(self.reply_time)+"\nreply_num"+str(self.reply_num)+"\nusername"+str(self.username)+"\nnickname:"+str(self.nickname)

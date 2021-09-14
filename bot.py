@@ -62,10 +62,12 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将帖子"+str(tid)+"标记为已处理")]))
             elif msg.count("封禁全部") > 0:
                 tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
+                s = " "
                 for user in user_list:
-                    tscout.tapi.ban_id(user,1,"在坟帖"+dig_thread_dict[quote_id][0].title+"下挖坟")
+                    tscout.tapi.ban_id(user,1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
+                    s += user + " "
                 dig_thread_dict.pop(quote_id)
-                await app.sendGroupMessage(group, MessageChain.create([Plain("已将帖子"+str(tid)+"下所有挖坟回复封禁")]))
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
     elif msg.startswith("."):
         if msg == (".测试"):
             await app.sendGroupMessage(group, MessageChain.create([Plain("Hello World!")]))
