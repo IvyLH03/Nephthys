@@ -47,7 +47,8 @@ class TombDiggerManager(object):
         保存处理记录。
         """
         with open("permanent_whitelist.txt","w",encoding="utf-8") as f:
-            f.writelines(self.permanent_whitelist)
+            for line in self.permanent_whitelist:
+                f.write(str(line)+"\n")
         with open("dig_record.txt","w",encoding="utf-8") as f:
             for i in self.dig_record:
                 s = str(i) + "("
