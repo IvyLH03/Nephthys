@@ -69,19 +69,40 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
     elif msg.startswith("."):
         if msg == (".测试"):
             await app.sendGroupMessage(group, MessageChain.create([Plain("Hello World!")]))
-        if msg == (".退出"):
+        elif msg == (".退出"):
             tscout.update_stats()
             await app.sendGroupMessage(group, MessageChain.create([Plain("记录已保存！")]))
             await app.sendGroupMessage(group, MessageChain.create([Plain("晚安")]))
             exit(0)
             await app.sendGroupMessage(group, MessageChain.create([Plain("退出失败")]))
+        elif msg.startswith(".加入白名单："):
+            try:
+                tid = int(msg[msg.find("：")+1:])
+                if tscout.append_whitelist(tid):
+                    await app.sendGroupMessage(group, MessageChain.create([Plain("加入成功")]))
+                else:
+                    await app.sendGroupMessage(group, MessageChain.create([Plain("失败：帖子已在白名单中")]))
+            except Exception as err:
+                print(err)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.加入白名单：1234567890”")]))
+        elif msg.startswith(".封禁"):
+            try:
+                day = int(msg[msg.find("禁")+1:msg.find("天")])
+                username = msg[msg.find("：")+1:msg.find(" ")]
+                reason = msg[msg.find(" "):]
+                flag, result = tscout.tapi.ban_id(username,day,reason)
+                if flag:
+                    await app.sendGroupMessage(group, MessageChain.create([Plain("封禁成功")]))
+                else:
+                    await app.sendGroupMessage(group, MessageChain.create([Plain("封禁失败，原因："+result)]))
+            except Exception as err:
+                print(err)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.封禁10天：圆号与游走球 恶意挖坟”\n目前仅支持封禁1、3、10天")]))
 
 async def regular_checking():
     global dig_thread_dict
     global bawu_group
-    print("start regular checking!")
     for group in await app.groupList():
-        print(group)
         if group.id == bawu_group:
             slayerGroup = group
     print("开始一轮新的检测")

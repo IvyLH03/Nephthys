@@ -11,7 +11,7 @@ class TiebaScout(object):
         thread_list =  self.tapi.get_threads()
         dig_list =  []
         for thread in thread_list:
-            if thread.reply_time == self.tdm.dig_record[thread.tid][1]:
+            if self.tdm.dig_record.__contains__(thread.tid) and thread.reply_time == self.tdm.dig_record[thread.tid][1]:
                 continue
             post_list = self.tapi.get_posts(thread.tid)
             thread_dig_list = self.tdm.judge_tomb_digging(thread,post_list)
@@ -23,5 +23,12 @@ class TiebaScout(object):
 
     def update_stats(self):
         self.tdm.save_records()
+
+    def append_whitelist(self,tid):
+        if tid not in self.tdm.permanent_whitelist:
+            self.tdm.permanent_whitelist.append(tid)
+            return True
+        else:
+            return False
 
 

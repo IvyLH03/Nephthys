@@ -52,7 +52,13 @@ class TombDiggerManager(object):
         with open("dig_record.txt","w",encoding="utf-8") as f:
             f.truncate()
             for i in self.dig_record:
-                f.write
+                s = str(i) + "("
+                if self.dig_record[i][0] == False:
+                    s += "0)"
+                else:
+                    s += "1)"
+                s += str(self.dig_record[i][1])+":"+str(self.dig_record[i][2])+"\n"
+                f.write(s)
 
     def _is_sealing(self, post: Post):
         """
