@@ -4,13 +4,14 @@ import os
 import functools
 import time
 from operator import attrgetter
+import json
 class TombDiggerManager(object):
     def __init__(self):
         self._load_records()
-        self.managers = []
+        self.sealing_keywords = ["坟"]
     def _load_records(self):
         """
-        加载白名单和处理记录
+        加载白名单/处理记录/吧务名单
         """
         self.permanent_whitelist = []
         with open("permanent_whitelist.txt","+a",encoding="utf-8") as f:
@@ -36,6 +37,10 @@ class TombDiggerManager(object):
                     self.dig_record[tid] = [is_tomb, last_reply_time, last_solve_time]
                 else:
                     break
+
+        with open("config.json","r",encoding="utf-8") as f:
+            config = json.load(f)
+        self.managers = config["Managers"]
 
     def save_records(self):
         """
