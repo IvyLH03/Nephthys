@@ -83,7 +83,8 @@ class TombDiggerManager(object):
         return:
             list[Post]：挖坟的回复
         """
-        
+        if thread.tid in self.permanent_whitelist:
+            return []
 
         if self.dig_record.__contains__(thread.tid):
             if int(time.time()) - thread.reply_time > 2670400:
