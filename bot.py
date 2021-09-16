@@ -25,7 +25,6 @@ with open("config.json","r",encoding="utf-8") as f:
 
 dig_thread_dict = {}
 
-
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
 app = GraiaMiraiApplication(
@@ -58,12 +57,15 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
             print(tid)
             if msg.count("已处理") > 0:
                 tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
+                for user in user_list:
+                    tscout.unsolved_digger.remove(user[0])
                 dig_thread_dict.pop(quote_id)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将帖子"+str(tid)+"标记为已处理")]))
             elif msg.count("封禁全部") > 0:
                 tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
                 s = " "
                 for user in user_list:
+                    tscout.unsolved_digger.remove(user[0])
                     tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
                     s += user[0] + " "
                 dig_thread_dict.pop(quote_id)
@@ -72,8 +74,9 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
                 s = " "
                 for user in user_list:
+                    tscout.unsolved_digger.remove(user[0])
                     tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
-                    tscout.tapi.reply_post(dig_thread_dict[quote_id][0].tid,user[1],"@"+user[0]+" 回帖前请前往置顶阅读本吧吧规。挖坟一天。")
+                    tscout.tapi.reply_post(dig_thread_dict[quote_id][0].tid,user[1],"@"+user[0]+" 回帖前请前往置顶阅读本吧吧规。挖坟封禁一天。")
                     s += user[0] + " "
                 tscout.tapi.reply_thread(dig_thread_dict[quote_id][0].tid,"--------坟贴勿回--------")
                 dig_thread_dict.pop(quote_id)
@@ -83,16 +86,24 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
                 s = " "
                 for user in user_list:
+                    tscout.unsolved_digger.remove(user[0])
                     tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
                     s += user[0] + " "
                 tscout.tapi.del_thread(dig_thread_dict[quote_id][0].tid)
                 dig_thread_dict.pop(quote_id)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已尝试删帖")]))
-                pass
             elif msg.count("楼主更新了") > 0:
+                for user in user_list:
+                    tscout.unsolved_digger.remove(user[0])
                 tscout.tdm.dig_record[tid][0] = False
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已经取消本帖的坟帖标记")]))
+            elif msg.count("加入白名单") > 0:
+                for user in user_list:
+                    tscout.unsolved_digger.remove(user[0])
+                tscout.tdm.dig_record[tid][0] = False
+                tscout.append_whitelist(tid)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已将本帖加入白名单")]))
     elif msg.startswith("."):
         if msg == (".测试"):
             await app.sendGroupMessage(group, MessageChain.create([Plain("Hello World!")]))
@@ -140,8 +151,7 @@ async def regular_checking():
     for group in await app.groupList():
         if group.id == bawu_group:
             slayerGroup = group
-    print("开始一轮新的检测")
-    dig_result_list = tscout.regular_checking()
+    dig_result_list, anti_attack_result_list = tscout.regular_checking()
     for i in dig_result_list:
         s = "检测到挖坟\n"
         s += "标题："+i[0].title+"\n链接：https://tieba.baidu.com/p/"+str(i[0].tid)+"\n"
@@ -166,6 +176,8 @@ async def regular_checking():
         k = await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain(s)]))
         k = k.messageId
         dig_thread_dict[k] = [i[0], user_list]
+    for i in anti_attack_result_list:
+        s = "检测到连续疑似挖坟："+i+"\n已自动封禁"
     """
     for at_del in at_del_list:
         s = at_del[0] + " 删除了 " + "https://tieba.baidu.com/p/" + str(at_del[1]) + "\n"

@@ -78,6 +78,16 @@ class TombDiggerManager(object):
         """
         return False
 
+    def get_tomb_status(self,tid:int):
+        """
+        查找记录中的坟帖状态。
+        如果无记录，返回False。
+        """
+        if self.dig_record.__contains__(tid):
+            return self.dig_record[tid][0]
+        else:
+            return False
+
     def judge_tomb_digging(self,thread: Thread, post_list: List[Post]):
         """
         检查一个帖子中是否有待处理的挖坟情况。
@@ -127,6 +137,8 @@ class TombDiggerManager(object):
         else:
             self.dig_record[thread.tid][1] = thread.reply_time
             return []
+
+                
 
 
     
