@@ -74,13 +74,15 @@ class TiebaScout(object):
         List[str]: 连续疑似挖坟的“昵称（用户名）”。
         """
         result_list = []
+        has_appended = []
         for dig in dig_list:
-            if dig.username in self.unsolved_digger and dig.username != lz:
+            if dig.username in self.unsolved_digger and dig.username != lz and dig.username not in has_appended:
                 self.tapi.ban_id(dig.username,1,"连续多次挖坟")
                 self.unsolved_digger.remove(dig.username)
                 result_list.append(dig.nickname + "（" + dig.username + "）")
             else:
                 self.unsolved_digger.append(dig.username)
+                has_appended.append(dig.username)
         return result_list
 
     
