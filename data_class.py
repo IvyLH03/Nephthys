@@ -22,7 +22,7 @@ class Post(object):
 					s += "#(" + i['c'] + ")"
 				elif i['type'] == '3':
 					s += "[图片]"
-				else:
+				elif i.__contains__('text'):
 					s += i['text']
 		self.content = s
 

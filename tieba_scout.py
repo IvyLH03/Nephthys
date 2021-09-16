@@ -22,7 +22,10 @@ class TiebaScout(object):
             post_list = self.tapi.get_posts(thread.tid)
             post_list = sorted(post_list, key=attrgetter('reply_time'), reverse=True) # 从最晚回复到最早回复排序
             # 查找是否存在挖坟
-            was_tomb = self.tdm.dig_record[thread.tid]
+            if self.tdm.dig_record.__contains__(thread.tid):
+                was_tomb = self.tdm.dig_record[thread.tid]
+            else:
+                was_tomb = False
             thread_dig_list = self.tdm.judge_tomb_digging(thread,post_list)
             if len(thread_dig_list) != 0:
                 dig_list.append((thread, thread_dig_list))
