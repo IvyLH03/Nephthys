@@ -34,7 +34,8 @@ class TiebaScout(object):
                 # 【等封号解除后再完善这部分】
 
                 # 防爆吧
-                anti_attack_result_list = self.anti_attack(thread_dig_list)
+                if thread_dig_list != ["疑似挖坟秒删"]:
+                    anti_attack_result_list = self.anti_attack(thread_dig_list)
                 anti_attack_list += anti_attack_result_list
                 # 报告挖坟情况，就算已经自动处理了也报告
                 dig_list.append((thread, thread_dig_list))
@@ -79,6 +80,7 @@ class TiebaScout(object):
                 self.unsolved_digger.remove(dig.username)
                 result_list.append(dig.nickname + "（" + dig.username + "）")
             else:
+                print("anti-attack system add user " + dig.username)
                 self.unsolved_digger.append(dig.username)
         return result_list
 
