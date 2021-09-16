@@ -35,7 +35,7 @@ class TiebaScout(object):
 
                 # 防爆吧
                 if thread_dig_list != ["疑似挖坟秒删"]:
-                    anti_attack_result_list = self.anti_attack(thread_dig_list)
+                    anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username)
                 anti_attack_list += anti_attack_result_list
                 # 报告挖坟情况，就算已经自动处理了也报告
                 dig_list.append((thread, thread_dig_list))
@@ -67,7 +67,7 @@ class TiebaScout(object):
         else:
             return False
 
-    def anti_attack(self, dig_list: List[Post]):
+    def anti_attack(self, dig_list: List[Post], lz:str):
         """
         防爆吧，自动封禁连续疑似挖坟用户。
         return:
@@ -75,7 +75,7 @@ class TiebaScout(object):
         """
         result_list = []
         for dig in dig_list:
-            if dig.username in self.unsolved_digger:
+            if dig.username in self.unsolved_digger and dig.username != lz:
                 self.tapi.ban_id(dig.username,1,"连续多次挖坟")
                 self.unsolved_digger.remove(dig.username)
                 result_list.append(dig.nickname + "（" + dig.username + "）")
