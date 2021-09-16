@@ -80,7 +80,6 @@ class TiebaScout(object):
                 self.unsolved_digger.remove(dig.username)
                 result_list.append(dig.nickname + "（" + dig.username + "）")
             else:
-                print("anti-attack system add user " + dig.username)
                 self.unsolved_digger.append(dig.username)
         return result_list
 

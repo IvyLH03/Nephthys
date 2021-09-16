@@ -185,7 +185,7 @@ async def regular_checking():
 
 
 scheduler = GraiaScheduler(loop,bcc)
-@scheduler.schedule(crontabify("* * * * * 0,10,20,30,40,50"))
+@scheduler.schedule(crontabify("* * * * * 0,5,10,15,20,25,30,35,40,45,50,55"))
 async def regular_check_schedule():
     await regular_checking()
 
