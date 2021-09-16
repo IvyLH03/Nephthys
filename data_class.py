@@ -17,19 +17,20 @@ class Post(object):
 
 		s = ""
 		for i in content:
-			if i['type'] == '2':
-				s += "#(" + i['c'] + ")"
-			elif i['type'] == '3':
-				s += "[图片]"
-			else:
-				s += i['text']
+			if i.__contains__('type'):
+				if i['type'] == '2':
+					s += "#(" + i['c'] + ")"
+				elif i['type'] == '3':
+					s += "[图片]"
+				else:
+					s += i['text']
 		self.content = s
 
 	def __str__(self):
 		return "pid:"+str(self.pid)+"\nreply_time:"+str(self.reply_time)+"\ncontent:"+str(self.content)+"\nnickname:"+str(self.nickname)+"\nusername:"+str(self.username)+"\nfloor_no:"+str(self.floor_no)+"\nis_lzl:"+str(self.is_lzl)
 
 class Thread(object):
-	def __init__(self, tid, title, post_time, reply_time, reply_num, username, nickname):
+	def __init__(self, tid, title, content, post_time, reply_time, reply_num, username, nickname):
 		self.tid = int(tid)
 		self.title = title
 		self.post_time = int(post_time)
@@ -38,13 +39,24 @@ class Thread(object):
 		self.username = username
 		self.nickname = nickname
 
+		s = ""
+		for i in content:
+			if i.__contains__('type'):
+				if i['type'] == '2':
+					s += "#(" + i['c'] + ")"
+				elif i['type'] == '3':
+					s += "[图片]"
+				else:
+					s += i['text']
+		self.content = s
+
 		if username == "":
 			self.username = nickname
 		if title == "":
-			self.title = "无标题"
+			self.title = self.content
 
 	def __str__(self):
-		return "tid:"+str(self.tid)+"\ntitle:"+str(self.title)+"\npost_time"+str(self.post_time)+"\nreply_time"+str(self.reply_time)+"\nreply_num"+str(self.reply_num)+"\nusername"+str(self.username)+"\nnickname:"+str(self.nickname)
+		return "tid:"+str(self.tid)+"\ntitle:"+str(self.title)+"\npost_time:"+str(self.post_time)+"\nreply_time:"+str(self.reply_time)+"\nreply_num:"+str(self.reply_num)+"\nusername:"+str(self.username)+"\nnickname:"+str(self.nickname)+"\ncontent:"+str(self.content)
 
 class DiggedThread(Thread):
 	def __init__(self, last_dig_time, diggings: List[Post] , *args, **kwargs):

@@ -35,6 +35,7 @@ class TiebaApi(object):
                                                                })
         self.web.cookies.update({'BDUSS': self.BDUSS, 'STOKEN': self.STOKEN})
         self.fid = self._get_fid(tieba_name)
+        self._get_tbs()
     def _get_fid(self,tieba_name):
         res = self.web.get("http://tieba.baidu.com/sign/info", params={
                                     'kw': tieba_name, 'ie': 'utf-8'}, timeout=(3, 10))
@@ -161,6 +162,9 @@ class TiebaApi(object):
         return True, ""
 
     def unban_id(self,id):
+        """
+        解封用户（暂时无法使用）
+        """
         username, nickname, user_id, portrait = self._get_user_info(id)
         payload = {'fn': self.tieba_name,
                    'fid': self.fid,
@@ -215,6 +219,7 @@ class TiebaApi(object):
             for thread_raw in main_json['thread_list']:
                 thread = Thread(thread_raw['tid'],
                                 thread_raw['title'],
+                                thread_raw['abstract'],
                                 thread_raw['create_time'],
                                 thread_raw['last_time_int'],
                                 thread_raw['reply_num'],
@@ -294,7 +299,6 @@ class TiebaApi(object):
             raise ValueError("status code is not 200")
 
         main_json = res.json()
-        # print(main_json,"\n\n\n")
         if int(main_json['error_code']):
             raise ValueError(main_json['error_msg'])
 
@@ -329,3 +333,133 @@ class TiebaApi(object):
          #   print("错误，原因："+str(err))
 
         return []
+
+    def get_thread(self,tid,pn=1,rn=30):
+        """
+        根据tid获取帖子信息。
+        注意：无法正常获取最后回复信息
+        """
+        payload = {'_client_version': '12.8.2.1',
+                   'kz': tid,
+                   'pn': pn,
+                   'rn': rn
+                   }
+        #try:
+        res = self.app.post("http://c.tieba.baidu.com/c/f/pb/page",data=self._app_sign(payload),timeout=(3,10))
+            
+        if res.status_code != 200:
+            raise ValueError("status code is not 200")
+
+        main_json = res.json()
+        if int(main_json['error_code']):
+            raise ValueError(main_json['error_msg'])
+
+        post_list = []
+        user_dict = {}
+
+        first_floor = main_json['post_list'][0]
+        user = main_json['user_list'][0]
+
+
+        return Thread(tid,first_floor['title'], main_json['thread']['origin_thread_info']['abstract'],first_floor['time'],0,main_json['thread']['reply_num'],user['name'],user['name_show'])
+    
+    def reply_thread(self,tid,content):
+        """
+        回复帖子。
+        """
+        payload={'BDUSS': self.BDUSS,
+        '_client_type': '2',
+        '_client_version': '12.8.2.1',
+        '_phone_imei': '000000000000000',
+        'content': content,
+        'fid': self.fid,
+        'kw': self.tieba_name,
+        'quote_id': "0",
+        'tbs': self.tbs,
+        'tid': tid}
+
+        try:
+            res = self.app.post("http://c.tieba.baidu.com/c/c/post/add",data=self._app_sign(payload),timeout=(3,10))
+        except Exception as err:
+            print(err)
+
+        sleep(2)
+
+    def reply_post(self,tid,pid,content):
+        """
+        回复评论。
+        """
+        payload={'BDUSS': self.BDUSS,
+        '_client_type': '2',
+        '_client_version': '12.8.2.1',
+        '_phone_imei': '000000000000000',
+        'content': content,
+        'fid': self.fid,
+        'kw': self.tieba_name,
+        'quote_id': pid,
+        'tbs': self.tbs,
+        'tid': tid}
+
+        res = self.app.post("http://c.tieba.baidu.com/c/c/post/add",data=self._app_sign(payload),timeout=(3,10))
+
+        sleep(2)
+
+
+
+
+    def del_thread(self,tid):
+        """
+        删除主题帖。
+        """
+        payload = {'ie': 'utf-8',
+                   'fid': self.fid,
+                   'kw':self.tieba_name,
+                   'tbs': self._get_tbs(),
+                   'tid': str(tid),
+                   'is_ban':0
+                   }
+        try:
+            res = self.web.post(
+                "https://tieba.baidu.com/f/commit/thread/batchDelete", data=payload, timeout=(3, 10))
+            print(res.json())
+            if res.status_code != 200:
+                raise ValueError("status code is not 200")
+
+            main_json = res.json()
+            if int(main_json['error_code']):
+                raise ValueError(main_json['error_msg'])
+
+        except Exception as err:
+            print(err)
+
+    def get_at(self):
+        payload = {'BDUSS':self.BDUSS}
+
+        try:
+            res = self.app.post(
+                "http://c.tieba.baidu.com/c/u/feed/atme", data=self._app_sign(payload), timeout=(3, 10))
+            main_json = res.json()
+
+        except Exception as err:
+            print(err)
+            return []
+    
+        try:
+            at_list = []
+            if not main_json['at_list']:
+                return []
+            for at_raw in main_json['at_list']:
+                username = at_raw['quote_user']['name']
+                if username == "": 
+                    username = at_raw['quote_user']['name_show']
+                nickname = at_raw['quote_user']['name_show']
+                tid = at_raw['thread_id']
+                text=at_raw['content']
+                at_list.append([username, nickname,tid,text])
+            return at_list
+
+        except Exception as err:
+            print(err)
+        
+        return []
+

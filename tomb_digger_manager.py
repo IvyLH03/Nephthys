@@ -14,7 +14,7 @@ class TombDiggerManager(object):
         加载白名单/处理记录/吧务名单
         """
         self.permanent_whitelist = []
-        with open("permanent_whitelist.txt","+a",encoding="utf-8") as f:
+        with open("permanent_whitelist.txt","r",encoding="utf-8") as f:
             while True:
                 line = f.readline()
                 if line:
@@ -26,9 +26,10 @@ class TombDiggerManager(object):
                     break
         # 12345(1)12312312312:123123123123
         self.dig_record = {}
-        with open("dig_record.txt","+a",encoding="utf-8") as f:
+        with open("dig_record.txt","r",encoding="utf-8") as f:
             while True:
                 line = f.readline()
+                print(line)
                 if line:
                     tid = int(line[:line.find("(")])
                     is_tomb = bool(int(line[line.find("(")+1:line.find(")")]))
@@ -41,7 +42,9 @@ class TombDiggerManager(object):
         with open("config.json","r",encoding="utf-8") as f:
             config = json.load(f)
         self.managers = config["Managers"]
-
+        print(self.permanent_whitelist)
+        print(self.managers)
+        print(self.dig_record)
     def save_records(self):
         """
         保存处理记录。
@@ -85,6 +88,8 @@ class TombDiggerManager(object):
             list[Post]：挖坟的回复
         """
         if thread.tid in self.permanent_whitelist:
+            self.dig_record[thread.tid][0]=False
+            self.dig_record[thread.tid][1]=thread.reply_time
             return []
 
         if self.dig_record.__contains__(thread.tid):
@@ -104,7 +109,6 @@ class TombDiggerManager(object):
                     return []
         else:
             self.dig_record[thread.tid] = [False, 0, 0]
-        post_list = sorted(post_list, key=attrgetter('reply_time'), reverse=True) # 从最晚回复到最早回复排序
         digged = False
         dig_list = []
         for i in range(len(post_list)-1):
@@ -113,7 +117,6 @@ class TombDiggerManager(object):
             if self._is_sealing(post_list[i]):
                 self.dig_record[thread.tid][2] = post_list[i].reply_time
             if post_list[i].reply_time - post_list[i+1].reply_time > 2678400:
-                print("查找到挖坟")
                 digged = True
                 break
 
@@ -126,11 +129,6 @@ class TombDiggerManager(object):
             return []
 
 
-    def _post_cmp(self, x: Post, y: Post):
-        if x.reply_time < y.reply_time:
-            return 1
-        if x.reply_time > y.reply_time:
-            return -1
-        return 0
+    
 
 

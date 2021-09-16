@@ -64,15 +64,40 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
                 s = " "
                 for user in user_list:
-                    tscout.tapi.ban_id(user,1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
-                    s += user + " "
+                    tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
+                    s += user[0] + " "
                 dig_thread_dict.pop(quote_id)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
+            elif msg.count("封禁并封坟") > 0:
+                tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
+                s = " "
+                for user in user_list:
+                    tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
+                    tscout.tapi.reply_post(dig_thread_dict[quote_id][0].tid,user[1],"@"+user[0]+" 回帖前请前往置顶阅读本吧吧规。挖坟一天。")
+                    s += user[0] + " "
+                tscout.tapi.reply_thread(dig_thread_dict[quote_id][0].tid,"--------坟贴勿回--------")
+                dig_thread_dict.pop(quote_id)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已封坟")]))
+            elif msg.count("封禁并删除") > 0:
+                tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
+                s = " "
+                for user in user_list:
+                    tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
+                    s += user[0] + " "
+                tscout.tapi.del_thread(dig_thread_dict[quote_id][0].tid)
+                dig_thread_dict.pop(quote_id)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已尝试删帖")]))
+                pass
+            elif msg.count("楼主更新了") > 0:
+                tscout.tdm.dig_record[tid][0] = False
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已经取消本帖的坟帖标记")]))
     elif msg.startswith("."):
         if msg == (".测试"):
             await app.sendGroupMessage(group, MessageChain.create([Plain("Hello World!")]))
         elif msg == (".退出"):
-            tscout.update_stats()
+            tscout.save_records()
             await app.sendGroupMessage(group, MessageChain.create([Plain("记录已保存！")]))
             await app.sendGroupMessage(group, MessageChain.create([Plain("晚安")]))
             exit(0)
@@ -100,6 +125,14 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
             except Exception as err:
                 print(err)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.封禁10天：圆号与游走球 恶意挖坟”\n目前仅支持封禁1、3、10天")]))
+        elif msg.startswith(".删除："):
+            try:
+                tid = int(msg[msg.find("：")+1:])
+                tscout.tapi.del_thread(tid)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已经尝试删除 https://tieba.baidu.com/p/")+str(tid)+" ，请手动检查是否成功"]))
+            except Exception as err:
+                print(err)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.删除：1234567890”")]))
 
 async def regular_checking():
     global dig_thread_dict
@@ -108,10 +141,10 @@ async def regular_checking():
         if group.id == bawu_group:
             slayerGroup = group
     print("开始一轮新的检测")
-    result_list = tscout.regular_checking()
-    for i in result_list:
-        s = "检测到挖坟"
-        s += "标题："+i[0].title+"\n链接：https://tieba.baidu.com/p/"+str(i[0].tid)
+    dig_result_list = tscout.regular_checking()
+    for i in dig_result_list:
+        s = "检测到挖坟\n"
+        s += "标题："+i[0].title+"\n链接：https://tieba.baidu.com/p/"+str(i[0].tid)+"\n"
         user_list = []
         if i[1] == ["疑似挖坟秒删"]:
             s += "\n疑似挖坟秒删"
@@ -120,18 +153,27 @@ async def regular_checking():
         else:
             s += "\n挖坟回复:\n"
             for j in i[1]:
-                s += "\n" + str(j.floor_no)
+                s += "\n" + str(j.floor_no) + "楼"
                 if j.is_lzl:
                     s += "(楼中楼）"
-                s += "：" + j.content + "\n昵称：" + j.nickname + "\n用户名：" + j.username +"\n"
-                user_list.append(j.username)
+                s +=  j.nickname 
+                if j.nickname != j.username:
+                    s += "(" + j.username +")"
+                if j.username == i[0].username:
+                    s += "【楼主】"
+                s += "\n回复内容：\n" + j.content + "\n"
+                user_list.append([j.username, j.pid])
         k = await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain(s)]))
         k = k.messageId
         dig_thread_dict[k] = [i[0], user_list]
+    """
+    for at_del in at_del_list:
+        s = at_del[0] + " 删除了 " + "https://tieba.baidu.com/p/" + str(at_del[1]) + "\n"
+    """
 
 
 scheduler = GraiaScheduler(loop,bcc)
-@scheduler.schedule(crontabify("* * * * * 0"))
+@scheduler.schedule(crontabify("* * * * * 0,10,20,30,40,50"))
 async def regular_check_schedule():
     await regular_checking()
 
