@@ -144,11 +144,11 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
         elif msg.startswith(".删除："):
             try:
                 tid = int(msg[msg.find("：")+1:])
+                tscout.tapi.del_thread(tid)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已经尝试删除 https://tieba.baidu.com/p/"+str(tid)+" ，请手动检查是否成功")]))
             except Exception as err:
                 print(err)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.删除：1234567890”")]))
-            tscout.tapi.del_thread(tid)
-            await app.sendGroupMessage(group, MessageChain.create([Plain("已经尝试删除 https://tieba.baidu.com/p/")+str(tid)+" ，请手动检查是否成功"]))
             
 
 async def regular_checking():

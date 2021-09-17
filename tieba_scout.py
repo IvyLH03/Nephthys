@@ -18,13 +18,40 @@ class TiebaScout(object):
         dig_list =  []
         anti_attack_list = []
         auto_solved_dig_list = []
+        at_del_list = []
         for thread in thread_list:
-            if self.tdm.dig_record.__contains__(thread.tid) and thread.reply_time == self.tdm.dig_record[thread.tid][1]:
+            last_round_reply_time = 0
+            if self.tdm.dig_record.__contains__(thread.tid):
                 # 如果并没有新回复，跳过本帖
-                continue
+                if thread.reply_time == self.tdm.dig_record[thread.tid][1]:
+                    continue
+                last_round_reply_time = self.tdm.dig_record[thread.tid][1]
+
+
             post_list = self.tapi.get_posts(thread.tid)
             post_list = sorted(post_list, key=attrgetter('reply_time'), reverse=True) # 从最晚回复到最早回复排序
 
+            
+            # 处理吧务删帖申请
+            """
+            at_del_list = []
+            at_list = self.tapi.get_at()
+            for i in at_list:
+                if i[0] in self.tdm.managers and i[3].count("删除") > 0:
+                    self.tapi.del_thread(int(i[2]))
+                    at_del_list.append([i[0], i[2]])
+            """
+            
+
+            for i in post_list:
+                if i.reply_time <= last_round_reply_time:
+                    break
+                if (i.username in self.tdm.managers) and i.content == ".删除":
+                    self.tapi.del_thread(thread.tid)
+                    at_del_list.append((i.username, thread.tid))
+                    break
+
+            # 处理坟帖
             # 判断记录中的坟帖状态
             was_tomb = self.tdm.get_tomb_status(thread.tid)
             # 获取挖坟回复列表
@@ -35,18 +62,13 @@ class TiebaScout(object):
 
                 # 防爆吧
                 if thread_dig_list != ["疑似挖坟秒删"]:
-                    anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username)
+                    anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid)
                 anti_attack_list += anti_attack_result_list
+
                 # 报告挖坟情况，就算已经自动处理了也报告
                 dig_list.append((thread, thread_dig_list))
  
-            # 查询at列表，处理吧务删帖申请
-        at_del_list = []
-        at_list = self.tapi.get_at()
-        for i in at_list:
-            if i[0] in self.tdm.managers and i[3].count("删除") > 0:
-                self.tapi.del_thread(int(i[2]))
-                at_del_list.append([i[0], i[2]])
+
    
 
         return dig_list, anti_attack_list, at_del_list
