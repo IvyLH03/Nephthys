@@ -16,7 +16,7 @@ class TiebaApi(object):
         self.tieba_name = tieba_name
         self.app = req.session()
         self.app.headers = req.structures.CaseInsensitiveDict({'Content-Type': 'application/x-www-form-urlencoded',
-                                                               'User-Agent': 'bdtb for Android 12.8.2.1',
+                                                               'User-Agent': 'bdtb for Android 7.9.2',
                                                                'Connection': 'Keep-Alive',
                                                                'Accept-Encoding': 'gzip',
                                                                'Accept': '*/*',
@@ -132,7 +132,7 @@ class TiebaApi(object):
         if username == "" and nickname == "":
             return False, "获取用户信息失败"
         payload = {'BDUSS': self.BDUSS,
-                    '_client_version': '12.8.2.1',
+                    '_client_version': '7.9.2',
                     'day': day,
                     'fid': self.fid,
                     'nick_name': nickname, 
@@ -197,7 +197,7 @@ class TiebaApi(object):
         return:
             List[Thread]
         """
-        payload = {'_client_version': '12.8.2.1',
+        payload = {'_client_version': '7.9.2',
                     'kw': self.tieba_name,
                     'pn': pn,
                     'rn': rn
@@ -242,7 +242,7 @@ class TiebaApi(object):
         return:
             List[Comment]
         """
-        payload = {'_client_version':'12.8.2.1',
+        payload = {'_client_version':'7.9.2',
                    'kz':tid,
                    'pid':pid,
                    'pn':pn}
@@ -287,7 +287,7 @@ class TiebaApi(object):
         return：
             List[Post]
         """
-        payload = {'_client_version': '12.8.2.1',
+        payload = {'_client_version': '7.9.2',
                    'kz': tid,
                    'pn': pn,
                    'rn': rn
@@ -339,7 +339,7 @@ class TiebaApi(object):
         根据tid获取帖子信息。
         注意：无法正常获取最后回复信息
         """
-        payload = {'_client_version': '12.8.2.1',
+        payload = {'_client_version': '7.9.2',
                    'kz': tid,
                    'pn': pn,
                    'rn': rn
@@ -369,7 +369,7 @@ class TiebaApi(object):
         """
         payload={'BDUSS': self.BDUSS,
         '_client_type': '2',
-        '_client_version': '12.8.2.1',
+        '_client_version': '7.9.2',
         '_phone_imei': '000000000000000',
         'content': content,
         'fid': self.fid,
@@ -391,7 +391,7 @@ class TiebaApi(object):
         """
         payload={'BDUSS': self.BDUSS,
         '_client_type': '2',
-        '_client_version': '12.8.2.1',
+        '_client_version': '7.9.2',
         '_phone_imei': '000000000000000',
         'content': content,
         'fid': self.fid,
