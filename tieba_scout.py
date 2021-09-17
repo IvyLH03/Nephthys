@@ -8,7 +8,7 @@ class TiebaScout(object):
         self.tapi = TiebaApi(BDUSS,STOKEN,tieba_name)
         self.tdm = TombDiggerManager()
         self.illegal_words = []
-        self.unsolved_digger = []
+        self.unsolved_digger = {}
 
     def regular_checking(self,type=0):
         """
@@ -64,22 +64,20 @@ class TiebaScout(object):
         else:
             return False
 
-    def anti_attack(self, dig_list: List[Post], lz:str):
+    def anti_attack(self, dig_list: List[Post], lz:str, tid:int):
         """
         防爆吧，自动封禁连续疑似挖坟用户。
         return:
         List[str]: 连续疑似挖坟的“昵称（用户名）”。
         """
         result_list = []
-        has_appended = []
         for dig in dig_list:
-            if dig.username in self.unsolved_digger and dig.username != lz and dig.username not in has_appended:
+            if self.unsolved_digger.__contains__(dig.username) and self.unsolved_digger[dig.username] != tid and dig.username != lz:
                 self.tapi.ban_id(dig.username,1,"连续多次挖坟")
-                self.unsolved_digger.remove(dig.username)
+                self.unsolved_digger.pop(dig.username)
                 result_list.append(dig.nickname + "（" + dig.username + "）")
-            else:
-                self.unsolved_digger.append(dig.username)
-                has_appended.append(dig.username)
+            elif dig.username != lz:
+                self.unsolved_digger[dig.username] = tid
         return result_list
 
     
