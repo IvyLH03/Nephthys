@@ -37,7 +37,6 @@ app = GraiaMiraiApplication(
     )
 )
 bawu_group = int(config["BawuGroup"])
-
 tscout = TiebaScout(config["BDUSS"],config["STOKEN"],config["TiebaName"])
 
 @bcc.receiver("FriendMessage")
@@ -56,14 +55,14 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
             user_list = dig_thread_dict[quote_id][1]
             print(tid)
             if msg.count("已处理") > 0:
-                tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
+                tscout.tdm.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.tdm.dig_record[tid][2])
                 for user in user_list:
                     if user[0] in tscout.unsolved_digger:
                         tscout.unsolved_digger.remove(user[0])
                 dig_thread_dict.pop(quote_id)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将帖子"+str(tid)+"标记为已处理")]))
             elif msg.count("封禁全部") > 0:
-                tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
+                tscout.tdm.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.tdm.dig_record[tid][2])
                 s = " "
                 for user in user_list:
                     if user[0] in tscout.unsolved_digger:
@@ -73,7 +72,7 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 dig_thread_dict.pop(quote_id)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
             elif msg.count("封禁并封坟") > 0:
-                tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
+                tscout.tdm.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.tdm.dig_record[tid][2])
                 s = " "
                 for user in user_list:
                     if user[0] in tscout.unsolved_digger:
@@ -86,7 +85,7 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已封坟")]))
             elif msg.count("封禁并删除") > 0:
-                tscout.tdm.dig_record[tid][2] = dig_thread_dict[quote_id][0].reply_time
+                tscout.tdm.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.tdm.dig_record[tid][2])
                 s = " "
                 for user in user_list:
                     if user[0] in tscout.unsolved_digger:
@@ -145,11 +144,12 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
         elif msg.startswith(".删除："):
             try:
                 tid = int(msg[msg.find("：")+1:])
-                tscout.tapi.del_thread(tid)
-                await app.sendGroupMessage(group, MessageChain.create([Plain("已经尝试删除 https://tieba.baidu.com/p/")+str(tid)+" ，请手动检查是否成功"]))
             except Exception as err:
                 print(err)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.删除：1234567890”")]))
+            tscout.tapi.del_thread(tid)
+            await app.sendGroupMessage(group, MessageChain.create([Plain("已经尝试删除 https://tieba.baidu.com/p/")+str(tid)+" ，请手动检查是否成功"]))
+            
 
 async def regular_checking():
     global dig_thread_dict
@@ -157,7 +157,7 @@ async def regular_checking():
     for group in await app.groupList():
         if group.id == bawu_group:
             slayerGroup = group
-    dig_result_list, anti_attack_result_list = tscout.regular_checking()
+    dig_result_list, anti_attack_result_list, at_del_list = tscout.regular_checking()
     for i in dig_result_list:
         s = "检测到挖坟\n"
         s += "标题："+i[0].title+"\n链接：https://tieba.baidu.com/p/"+str(i[0].tid)+"\n"
@@ -184,10 +184,10 @@ async def regular_checking():
         dig_thread_dict[k] = [i[0], user_list]
     for i in anti_attack_result_list:
         await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain("检测到连续疑似挖坟："+i+"\n已自动封禁")]))
-    """
+
     for at_del in at_del_list:
         s = at_del[0] + " 删除了 " + "https://tieba.baidu.com/p/" + str(at_del[1]) + "\n"
-    """
+        await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain(s)]))
 
 
 scheduler = GraiaScheduler(loop,bcc)

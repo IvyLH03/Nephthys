@@ -122,7 +122,7 @@ class TombDiggerManager(object):
         digged = False
         dig_list = []
         for i in range(len(post_list)-1):
-            if (not self._is_sealing(post_list[i])) and (not self._is_reporting(post_list[i])) and post_list[i].reply_time > self.dig_record[thread.tid][2] and int(time.time()) - post_list[i].reply_time < 86400:
+            if (not self._is_sealing(post_list[i])) and (not self._is_reporting(post_list[i])) and post_list[i].reply_time > self.dig_record[thread.tid][1] and int(time.time()) - post_list[i].reply_time < 86400:
                 dig_list.append(post_list[i])
             if self._is_sealing(post_list[i]):
                 self.dig_record[thread.tid][2] = post_list[i].reply_time

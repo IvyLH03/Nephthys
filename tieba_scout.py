@@ -39,20 +39,17 @@ class TiebaScout(object):
                 anti_attack_list += anti_attack_result_list
                 # 报告挖坟情况，就算已经自动处理了也报告
                 dig_list.append((thread, thread_dig_list))
-        """
-            # 查询at列表：
+ 
+            # 查询at列表，处理吧务删帖申请
         at_del_list = []
-        try:
-            at_list = self.tapi.get_at()
-            for i in at_list:
-                if i[0] in self.tdm.managers and i[3].count("删除") > 0:
-                    self.tapi.del_thread(int(i[2]))
-                    at_del_list.append([username, tid])
-        except Exception as err:
-            print(err)
-        """
+        at_list = self.tapi.get_at()
+        for i in at_list:
+            if i[0] in self.tdm.managers and i[3].count("删除") > 0:
+                self.tapi.del_thread(int(i[2]))
+                at_del_list.append([i[0], i[2]])
+   
 
-        return dig_list, anti_attack_list
+        return dig_list, anti_attack_list, at_del_list
 
     def save_records(self):
         self.tdm.save_records()
