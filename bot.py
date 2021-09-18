@@ -38,6 +38,7 @@ app = GraiaMiraiApplication(
 )
 bawu_group = int(config["BawuGroup"])
 tscout = TiebaScout(config["BDUSS"],config["STOKEN"],config["TiebaName"])
+welcome_message = True
 
 @bcc.receiver("FriendMessage")
 async def friend_message_listener(app: GraiaMiraiApplication, friend: Friend, message: MessageChain):
@@ -151,13 +152,13 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.删除：1234567890”")]))
             
 
-async def regular_checking():
+async def regular_checking(welcome_message=False):
     global dig_thread_dict
     global bawu_group
     for group in await app.groupList():
         if group.id == bawu_group:
             slayerGroup = group
-    dig_result_list, anti_attack_result_list, at_del_list = tscout.regular_checking()
+    dig_result_list, anti_attack_result_list, at_del_list = tscout.regular_checking(welcome_message)
     for i in dig_result_list:
         s = "检测到挖坟\n"
         s += "标题："+i[0].title+"\n链接：https://tieba.baidu.com/p/"+str(i[0].tid)+"\n"
@@ -193,7 +194,16 @@ async def regular_checking():
 scheduler = GraiaScheduler(loop,bcc)
 @scheduler.schedule(crontabify("* * * * * 0,5,10,15,20,25,30,35,40,45,50,55"))
 async def regular_check_schedule():
-    await regular_checking()
+    global welcome_message
+    if welcome_message:
+        for group in await app.groupList():
+            if group.id == bawu_group:
+                slayerGroup = group
+        await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain("早上好")]))
+        await regular_checking(welcome_message=True)
+        welcome_message = False
+    else:
+        await regular_checking()
 
 
 

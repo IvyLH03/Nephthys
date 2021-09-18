@@ -10,11 +10,14 @@ class TiebaScout(object):
         self.illegal_words = []
         self.unsolved_digger = {}
 
-    def regular_checking(self,type=0):
+    def regular_checking(self,first_check = False):
         """
-        type暂时没用
+        first_check: 为True时多查几页
         """
-        thread_list =  self.tapi.get_threads()
+        if first_check:
+            thread_list = self.tapi.get_threads()+self.tapi.get_threads(2)+self.tapi.get_threads(3)
+        else:
+            thread_list =  self.tapi.get_threads()
         dig_list =  []
         anti_attack_list = []
         auto_solved_dig_list = []
