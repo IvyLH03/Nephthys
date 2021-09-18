@@ -62,7 +62,7 @@ class TiebaScout(object):
 
                 # 防爆吧
                 if thread_dig_list != ["疑似挖坟秒删"]:
-                    anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid, thread.id)
+                    anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid)
                 anti_attack_list += anti_attack_result_list
 
                 # 报告挖坟情况，就算已经自动处理了也报告
