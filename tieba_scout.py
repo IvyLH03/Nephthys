@@ -62,7 +62,7 @@ class TiebaScout(object):
 
                 # 防爆吧
                 if thread_dig_list != ["疑似挖坟秒删"]:
-                    anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid)
+                    anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid, thread.id)
                 anti_attack_list += anti_attack_result_list
 
                 # 报告挖坟情况，就算已经自动处理了也报告
@@ -95,11 +95,11 @@ class TiebaScout(object):
         result_list = []
         for dig in dig_list:
             if self.unsolved_digger.__contains__(dig.username) and self.unsolved_digger[dig.username] != tid and dig.username != lz:
-                self.tapi.ban_id(dig.username,1,"连续多次挖坟")
-                self.unsolved_digger.pop(dig.username)
+                self.tapi.ban_id(dig.portrait,1,"连续多次挖坟")
+                self.unsolved_digger.pop(dig.portrait)
                 result_list.append(dig.nickname + "（" + dig.username + "）")
             elif dig.username != lz:
-                self.unsolved_digger[dig.username] = tid
+                self.unsolved_digger[dig.portrait] = tid
         return result_list
 
     

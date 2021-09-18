@@ -82,18 +82,21 @@ class TiebaApi(object):
 
         return data
 
-    def _get_user_info(self, user_name):
+    def _get_user_info(self, id:str):
         """
         获取用户信息
         参数：
-            user_name: string 昵称或用户名
+            id: string 昵称/用户名/id
         返回值：
             username: 用户名
             nickname: 用户昵称
             user_id: 用户 ID
             portrait: 用户头像portrait值
         """
-        params = {'un': user_name}
+        if id.startswith("tb."):
+            params = {'id': id}
+        else:
+            params = {'un': id}
         try:
             res = self.web.get(
                 "https://tieba.baidu.com/home/get/panel", params=params, timeout=(3, 10))
@@ -114,7 +117,7 @@ class TiebaApi(object):
             return username, nickname, user_id, portrait
 
         except Exception as err:
-            print(f"Failed to get UserInfo of {user_name} Reason:{err}")
+            print(f"Failed to get UserInfo of {id} Reason:{err}")
             return '', '', '', ''
 
     def ban_id(self, id, day, reason='违反吧规'):
@@ -215,7 +218,7 @@ class TiebaApi(object):
             user_dict = {}
             thread_list = []
             for user in main_json['user_list']:
-                user_dict[user['id']] = user['name'], user['name_show']
+                user_dict[user['id']] = user['name'], user['name_show'], user['portrait']
             for thread_raw in main_json['thread_list']:
                 thread = Thread(thread_raw['tid'],
                                 thread_raw['title'],
@@ -224,7 +227,8 @@ class TiebaApi(object):
                                 thread_raw['last_time_int'],
                                 thread_raw['reply_num'],
                                 user_dict[thread_raw['author_id']][0],
-                                user_dict[thread_raw['author_id']][1]
+                                user_dict[thread_raw['author_id']][1],
+                                user_dict[thread_raw['author_id']][2]
                                 )
                 thread_list.append(thread)
 
@@ -266,7 +270,8 @@ class TiebaApi(object):
                             raw_post['author']['name_show'],
                             raw_post['author']['name'],
                             floor_no,
-                            True)
+                            True,
+                            raw_post['author']['portrait'])
                 post_list.append(post)
             if pn != 1:
                 return post_list
@@ -307,7 +312,9 @@ class TiebaApi(object):
         for user in main_json['user_list']:
             if not user.get('portrait',None):
                 continue
-            user_dict[user['id']] = user['name'], user['name_show']
+            if not user.__contains__('name'):
+                continue
+            user_dict[user['id']] = user['name'], user['name_show'], user['portrait']
         for post_raw in main_json['post_list']:
             post = Post(post_raw['id'],
                         post_raw['time'],
@@ -315,7 +322,8 @@ class TiebaApi(object):
                         user_dict[post_raw['author_id']][1],
                         user_dict[post_raw['author_id']][0],
                         post_raw['floor'],
-                        False
+                        False,
+                        user_dict[post_raw['author_id']][2]
                         )
             post_list.append(post)
             if int(post_raw['sub_post_number']) > 0:
@@ -361,7 +369,7 @@ class TiebaApi(object):
         user = main_json['user_list'][0]
 
 
-        return Thread(tid,first_floor['title'], main_json['thread']['origin_thread_info']['abstract'],first_floor['time'],0,main_json['thread']['reply_num'],user['name'],user['name_show'])
+        return Thread(tid,first_floor['title'], main_json['thread']['origin_thread_info']['abstract'],first_floor['time'],0,main_json['thread']['reply_num'],user['name'],user['name_show'],user['portrait'])
     
     def reply_thread(self,tid,content):
         """

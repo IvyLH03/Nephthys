@@ -57,17 +57,17 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
             if msg.count("已处理") > 0:
                 tscout.tdm.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.tdm.dig_record[tid][2])
                 for user in user_list:
-                    if tscout.unsolved_digger.__contains__(user[0]):
-                        tscout.unsolved_digger.pop(user[0])
+                    if tscout.unsolved_digger.__contains__(user[2]):
+                        tscout.unsolved_digger.pop(user[2])
                 dig_thread_dict.pop(quote_id)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将帖子"+str(tid)+"标记为已处理")]))
             elif msg.count("封禁全部") > 0:
                 tscout.tdm.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.tdm.dig_record[tid][2])
                 s = " "
                 for user in user_list:
-                    if tscout.unsolved_digger.__contains__(user[0]):
-                        tscout.unsolved_digger.pop(user[0])
-                    tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
+                    if tscout.unsolved_digger.__contains__(user[2]):
+                        tscout.unsolved_digger.pop(user[2])
+                    tscout.tapi.ban_id(user[2],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
                     s += user[0] + " "
                 dig_thread_dict.pop(quote_id)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
@@ -75,9 +75,9 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 tscout.tdm.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.tdm.dig_record[tid][2])
                 s = " "
                 for user in user_list:
-                    if tscout.unsolved_digger.__contains__(user[0]):
-                        tscout.unsolved_digger.pop(user[0])
-                    tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
+                    if tscout.unsolved_digger.__contains__(user[2]):
+                        tscout.unsolved_digger.pop(user[2])
+                    tscout.tapi.ban_id(user[2],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
                     tscout.tapi.reply_post(dig_thread_dict[quote_id][0].tid,user[1],"@"+user[0]+" 回帖前请前往置顶阅读本吧吧规。挖坟封禁一天。")
                     s += user[0] + " "
                 tscout.tapi.reply_thread(dig_thread_dict[quote_id][0].tid,"--------坟贴勿回--------")
@@ -88,9 +88,9 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 tscout.tdm.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.tdm.dig_record[tid][2])
                 s = " "
                 for user in user_list:
-                    if tscout.unsolved_digger.__contains__(user[0]):
-                        tscout.unsolved_digger.pop(user[0])
-                    tscout.tapi.ban_id(user[0],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
+                    if tscout.unsolved_digger.__contains__(user[2]):
+                        tscout.unsolved_digger.pop(user[2])
+                    tscout.tapi.ban_id(user[2],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
                     s += user[0] + " "
                 tscout.tapi.del_thread(dig_thread_dict[quote_id][0].tid)
                 dig_thread_dict.pop(quote_id)
@@ -98,14 +98,14 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已尝试删帖")]))
             elif msg.count("楼主更新了") > 0:
                 for user in user_list:
-                    if tscout.unsolved_digger.__contains__(user[0]):
-                        tscout.unsolved_digger.pop(user[0])
+                    if tscout.unsolved_digger.__contains__(user[2]):
+                        tscout.unsolved_digger.pop(user[2])
                 tscout.tdm.dig_record[tid][0] = False
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已经取消本帖的坟帖标记")]))
             elif msg.count("加入白名单") > 0:
                 for user in user_list:
-                    if tscout.unsolved_digger.__contains__(user[0]):
-                        tscout.unsolved_digger.pop(user[0])
+                    if tscout.unsolved_digger.__contains__(user[2]):
+                        tscout.unsolved_digger.pop(user[2])
                 tscout.tdm.dig_record[tid][0] = False
                 tscout.append_whitelist(tid)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将本帖加入白名单")]))
@@ -178,7 +178,7 @@ async def regular_checking():
                 if j.username == i[0].username:
                     s += "【楼主】"
                 s += "\n回复内容：\n" + j.content + "\n"
-                user_list.append([j.username, j.pid])
+                user_list.append([j.username, j.pid, j.portrait])
         k = await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain(s)]))
         k = k.messageId
         dig_thread_dict[k] = [i[0], user_list]
