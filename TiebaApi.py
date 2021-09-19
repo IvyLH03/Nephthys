@@ -3,6 +3,7 @@ from hashlib import md5
 import hashlib
 from random import random
 from time import sleep
+import time
 
 from typing import List
 
@@ -379,36 +380,24 @@ class TiebaApi(object):
         '_client_type': '2',
         '_client_version': '7.9.2',
         '_phone_imei': '000000000000000',
+        'anonymous': '1',
         'content': content,
         'fid': self.fid,
+        'from': '1008621x',
+        'is_ad': '0',
         'kw': self.tieba_name,
-        'quote_id': "0",
+        'model': 'MI+5',
+        'net_type': '1',
+        'new_vcode': '1',
         'tbs': self.tbs,
-        'tid': tid}
+        'tid': tid,
+        'timestamp': str(int(time.time())),
+        'vcode_tag': '11',}
 
         try:
             res = self.app.post("http://c.tieba.baidu.com/c/c/post/add",data=self._app_sign(payload),timeout=(3,10))
         except Exception as err:
             print(err)
-
-        sleep(2)
-
-    def reply_post(self,tid,pid,content):
-        """
-        回复评论。
-        """
-        payload={'BDUSS': self.BDUSS,
-        '_client_type': '2',
-        '_client_version': '7.9.2',
-        '_phone_imei': '000000000000000',
-        'content': content,
-        'fid': self.fid,
-        'kw': self.tieba_name,
-        'quote_id': pid,
-        'tbs': self.tbs,
-        'tid': tid}
-
-        res = self.app.post("http://c.tieba.baidu.com/c/c/post/add",data=self._app_sign(payload),timeout=(3,10))
 
         sleep(2)
 

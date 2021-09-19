@@ -29,7 +29,6 @@ class TombDiggerManager(object):
         with open("dig_record.txt","r",encoding="utf-8") as f:
             while True:
                 line = f.readline()
-                print(line)
                 if line:
                     tid = int(line[:line.find("(")])
                     is_tomb = bool(int(line[line.find("(")+1:line.find(")")]))
@@ -42,9 +41,6 @@ class TombDiggerManager(object):
         with open("config.json","r",encoding="utf-8") as f:
             config = json.load(f)
         self.managers = config["Managers"]
-        print(self.permanent_whitelist)
-        print(self.managers)
-        print(self.dig_record)
     def save_records(self):
         """
         保存处理记录。

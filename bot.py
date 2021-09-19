@@ -79,7 +79,6 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                     if tscout.unsolved_digger.__contains__(user[2]):
                         tscout.unsolved_digger.pop(user[2])
                     tscout.tapi.ban_id(user[2],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
-                    tscout.tapi.reply_post(dig_thread_dict[quote_id][0].tid,user[1],"@"+user[0]+" 回帖前请前往置顶阅读本吧吧规。挖坟封禁一天。")
                     s += user[0] + " "
                 tscout.tapi.reply_thread(dig_thread_dict[quote_id][0].tid,"--------坟贴勿回--------")
                 dig_thread_dict.pop(quote_id)
@@ -150,6 +149,18 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
             except Exception as err:
                 print(err)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.删除：1234567890”")]))
+        elif msg.startswith(".解封："):
+            try:
+                username = msg[msg.find("：")+1:]
+                flag, result = tscout.tapi.unban_id(username)
+                if flag:
+                    await app.sendGroupMessage(group, MessageChain.create([Plain("解封成功")]))
+                else:
+                    await app.sendGroupMessage(group,MessageChain.create([Plain("解封失败，原因："+result)]))
+            except Exception as err:
+                print(err)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.解封：圆号与游走球”")]))
+
             
 
 async def regular_checking(welcome_message=False):
