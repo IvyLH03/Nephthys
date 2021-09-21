@@ -167,7 +167,7 @@ class TiebaApi(object):
 
     def unban_id(self,id):
         """
-        解封用户（暂时无法使用）
+        解封用户
         """
         username, nickname, user_id, portrait = self._get_user_info(id)
         payload = {'fn': self.tieba_name,
@@ -428,6 +428,33 @@ class TiebaApi(object):
 
         except Exception as err:
             print(err)
+
+    def block_thread(self,tid):
+        """
+        屏蔽主题帖。
+        """
+        payload = {'BDUSS': self.BDUSS,
+                   '_client_version': '7.9.2',
+                   'fid': self.fid,
+                   'is_frs_mask': 1,
+                   'tbs': self.tbs,
+                   'z': tid
+                   }
+        try:
+            res = self.app.post(
+                "http://c.tieba.baidu.com/c/c/bawu/delthread", data=self._app_sign(payload), timeout=(3, 10))
+
+            print(res.json())
+            if res.status_code != 200:
+                raise ValueError("status code is not 200")
+
+            main_json = res.json()
+            if int(main_json['error_code']):
+                raise ValueError(main_json['error_msg'])
+
+        except Exception as err:
+            print(err)
+
 
     def get_at(self):
         payload = {'BDUSS':self.BDUSS}
