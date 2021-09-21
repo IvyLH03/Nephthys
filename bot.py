@@ -94,7 +94,19 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                 tscout.tapi.del_thread(dig_thread_dict[quote_id][0].tid)
                 dig_thread_dict.pop(quote_id)
                 await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
-                await app.sendGroupMessage(group, MessageChain.create([Plain("已尝试删帖")]))
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已删帖")]))
+            elif msg.count("封禁并屏蔽") > 0:
+                tscout.dig_record[tid][2] = max(dig_thread_dict[quote_id][0].reply_time,tscout.dig_record[tid][2])
+                s = " "
+                for user in user_list:
+                    if tscout.unsolved_digger.__contains__(user[2]):
+                        tscout.unsolved_digger.pop(user[2])
+                    tscout.tapi.ban_id(user[2],1,"在坟帖 "+dig_thread_dict[quote_id][0].title+" 下挖坟")
+                    s += user[0] + " "
+                tscout.tapi.block_thread(dig_thread_dict[quote_id][0].tid)
+                dig_thread_dict.pop(quote_id)
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已将"+s+"封禁")]))
+                await app.sendGroupMessage(group, MessageChain.create([Plain("已屏蔽")]))
             elif msg.count("楼主更新了") > 0:
                 for user in user_list:
                     if tscout.unsolved_digger.__contains__(user[2]):
@@ -197,7 +209,7 @@ async def regular_checking(welcome_message=False):
         await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain("检测到连续疑似挖坟："+i+"\n已自动封禁")]))
 
     for at_del in at_del_list:
-        s = at_del[0] + " 删除了 " + "https://tieba.baidu.com/p/" + str(at_del[1]) + "\n"
+        s = at_del[0] + " " + at_del[2] + "了 " + "https://tieba.baidu.com/p/" + str(at_del[1]) + "\n"
         await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain(s)]))
 
     for i in auto_solved_dig_list:

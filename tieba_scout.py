@@ -94,7 +94,7 @@ class TiebaScout(object):
         else:
             return False
 
-    def judge_tomb_digging(self,thread: Thread, post_list: List[Post]):
+    def judge_tomb_digging(self,thread: Thread, post_list: List[Post], last_reply_time: int = 0):
         """
         检查一个帖子中是否有待处理的挖坟情况。
         参数: 
@@ -186,10 +186,14 @@ class TiebaScout(object):
             for i in post_list:
                 if i.reply_time <= last_round_reply_time:
                     break
-                if (i.username in self.managers) and i.content == ".删除":
-                    self.tapi.del_thread(thread.tid)
-                    at_del_list.append((i.username, thread.tid))
-                    break
+                if (i.username in self.managers):
+                    if i.content == ".删除":
+                        self.tapi.del_thread(thread.tid)
+                        at_del_list.append((i.username, thread.tid, "删除"))
+                    elif i.content == ".屏蔽":
+                        self.tapi.block_thread(thread.tid)
+                        self.tapi.del_post(thread.tid, i.pid)
+                        at_del_list.append((i.username, thread.tid, "屏蔽"))
 
             # 处理坟帖
             # 判断记录中的坟帖状态

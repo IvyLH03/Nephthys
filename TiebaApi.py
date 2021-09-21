@@ -455,6 +455,33 @@ class TiebaApi(object):
         except Exception as err:
             print(err)
 
+    def del_post(self, tid, pid):
+        """
+        删除回复
+        """
+
+        payload = {'BDUSS': self.BDUSS,
+                   '_client_version': '7.9.2',
+                   'fid': self.fid,
+                   'pid': pid,
+                   'tbs': self.tbs,
+                   'z': tid
+                   }
+
+        try:
+            res = self.app.post(
+                "http://c.tieba.baidu.com/c/c/bawu/delpost", data=self._app_sign(payload), timeout=(3, 10))
+
+            if res.status_code != 200:
+                raise ValueError("status code is not 200")
+
+            main_json = res.json()
+            if int(main_json['error_code']):
+                raise ValueError(main_json['error_msg'])
+
+        except Exception as err:
+            print(err)
+
 
     def get_at(self):
         payload = {'BDUSS':self.BDUSS}
