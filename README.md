@@ -18,3 +18,9 @@
 - 敏感词判定
 - 循环封禁
 - 自动发送管理日志帖
+
+
+
+本项目的API部分参考了 [Tieba-Cloud-Review](https://github.com/Starry-OvO/Tieba-Cloud-Review)
+
+本项目的QQ机器人部分使用了[Graia Application for mirai-api-http](https://github.com/GraiaProject/Application)
