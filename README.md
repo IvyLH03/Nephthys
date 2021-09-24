@@ -1,4 +1,4 @@
-# TiebaBawuBot
+# Nephthys
 
 ### 代号“法老诅咒”的贴吧管理机器人
 
