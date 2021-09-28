@@ -180,7 +180,7 @@ async def regular_checking(welcome_message=False):
     for group in await app.groupList():
         if group.id == bawu_group:
             slayerGroup = group
-    dig_result_list, anti_attack_result_list, at_del_list, auto_solved_dig_list = tscout.regular_checking(welcome_message)
+    dig_result_list, anti_attack_result_list, at_del_list, auto_solved_dig_list, auto_del_list = tscout.regular_checking(welcome_message)
     for i in dig_result_list:
         s = "检测到挖坟\n"
         s += "标题："+i[0].title+"\n链接：https://tieba.baidu.com/p/"+str(i[0].tid)+"\n"
@@ -223,6 +223,11 @@ async def regular_checking(welcome_message=False):
         if i[1].nickname != i[1].username:
             s += "(" + i[1].username +")"
         s += "\n回复内容：\n" + i[1].content + "\n"
+        await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain(s)]))
+
+    for i in auto_del_list:
+        s = "关键词删帖\n\n"
+        s += "标题："+i.title+"\n链接：https://tieba.baidu.com/p/"+str(i.tid)+"\n内容:" + i.content
         await app.sendGroupMessage(slayerGroup,MessageChain.create([Plain(s)]))
 
 

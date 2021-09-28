@@ -160,8 +160,15 @@ class TiebaScout(object):
         anti_attack_list = []
         auto_solved_dig_list = []
         at_del_list = []
+        auto_del_list = []
         
         for thread in thread_list:
+
+            if thread.content.count("返利") > 0 or thread.content.count("充值") > 0 or thread.content.count("充直") > 0:
+                self.tapi.del_thread(thread.tid)
+                auto_del_list.append(thread)
+                continue
+
             last_round_reply_time = 0
             if self.dig_record.__contains__(thread.tid):
                 # 如果并没有新回复，跳过本帖
@@ -175,14 +182,12 @@ class TiebaScout(object):
 
             
             # 处理吧务删帖申请
-            """
-            at_del_list = []
             at_list = self.tapi.get_at()
             for i in at_list:
                 if i[0] in self.tdm.managers and i[3].count("删除") > 0:
                     self.tapi.del_thread(int(i[2]))
-                    at_del_list.append([i[0], i[2]])
-            """
+                    at_del_list.append([i[0], i[2]],"删除")
+
             for i in post_list:
                 if i.reply_time <= last_round_reply_time:
                     break
@@ -221,7 +226,7 @@ class TiebaScout(object):
 
    
 
-        return dig_list, anti_attack_list, at_del_list, auto_solved_dig_list
+        return dig_list, anti_attack_list, at_del_list, auto_solved_dig_list, auto_del_list
 
 
     def append_whitelist(self,tid):
