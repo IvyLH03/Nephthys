@@ -46,6 +46,7 @@ class TiebaScout(object):
         with open("config.json","r",encoding="utf-8") as f:
             config = json.load(f)
         self.managers = config["Managers"]
+        self.answerers = config["Answerers"]
         self.sealing_keywords = ["坟"]
 
     def save_records(self):
@@ -161,7 +162,17 @@ class TiebaScout(object):
         auto_solved_dig_list = []
         at_del_list = []
         auto_del_list = []
-        
+
+        # 处理吧务删帖申请
+        at_list = self.tapi.get_at()
+        for i in at_list:
+            if i[0] in self.managers and i[3].count("删除") > 0:
+                self.tapi.del_thread(int(i[2]))
+                at_del_list.append([i[0], i[2]],"删除")
+            elif (i[0] in self.managers or i[0] in self.answerers) and i[3].count("屏蔽") > 0:
+                self.tapi.block_thread(int(i[2]))
+                at_del_list.append([i[0], i[2]],"屏蔽")
+
         for thread in thread_list:
 
             if thread.content.count("返利") > 0 or thread.content.count("充值") > 0 or thread.content.count("充直") > 0:
@@ -180,17 +191,10 @@ class TiebaScout(object):
             post_list = self.tapi.get_posts(thread.tid)
             post_list = sorted(post_list, key=attrgetter('reply_time'), reverse=True) # 从最晚回复到最早回复排序
 
-            
-            # 处理吧务删帖申请
-            at_list = self.tapi.get_at()
-            for i in at_list:
-                if i[0] in self.tdm.managers and i[3].count("删除") > 0:
-                    self.tapi.del_thread(int(i[2]))
-                    at_del_list.append([i[0], i[2]],"删除")
-
             for i in post_list:
                 if i.reply_time <= last_round_reply_time:
                     break
+                # 处理吧务删帖申请
                 if (i.username in self.managers):
                     if i.content == ".删除":
                         self.tapi.del_thread(thread.tid)
@@ -247,7 +251,7 @@ class TiebaScout(object):
         """
         result_list = []
         for dig in dig_list:
-            if self.unsolved_digger.__contains__(dig.username) and self.unsolved_digger[dig.username] != tid and dig.username != lz:
+            if self.unsolved_digger.__contains__(dig.portrait) and self.unsolved_digger[dig.portrait] != tid and dig.username != lz:
                 self.tapi.ban_id(dig.portrait,1,"连续多次挖坟")
                 self.unsolved_digger.pop(dig.portrait)
                 result_list.append(dig.nickname + "（" + dig.username + "）")
