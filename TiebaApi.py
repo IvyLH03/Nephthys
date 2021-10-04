@@ -272,7 +272,8 @@ class TiebaApi(object):
                             raw_post['author']['name'],
                             floor_no,
                             True,
-                            raw_post['author']['portrait'])
+                            raw_post['author']['portrait'],
+                            raw_post['author']['level_id'])
                 post_list.append(post)
             if pn != 1:
                 return post_list
@@ -315,7 +316,7 @@ class TiebaApi(object):
                 continue
             if not user.__contains__('name'):
                 continue
-            user_dict[user['id']] = user['name'], user['name_show'], user['portrait']
+            user_dict[user['id']] = user['name'], user['name_show'], user['portrait'], user['level_id']
         for post_raw in main_json['post_list']:
             post = Post(post_raw['id'],
                         post_raw['time'],
@@ -324,7 +325,8 @@ class TiebaApi(object):
                         user_dict[post_raw['author_id']][0],
                         post_raw['floor'],
                         False,
-                        user_dict[post_raw['author_id']][2]
+                        user_dict[post_raw['author_id']][2],
+                        user_dict[post_raw['author_id']][3]
                         )
             post_list.append(post)
             if int(post_raw['sub_post_number']) > 0:

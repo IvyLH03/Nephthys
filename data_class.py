@@ -2,7 +2,7 @@ import datetime
 from typing import List
 
 class Post(object):
-	def __init__(self, pid, reply_time, content, nickname, username, floor_no, is_lzl, portrait):
+	def __init__(self, pid, reply_time, content, nickname, username, floor_no, is_lzl, portrait, level):
 		self.pid = int(pid)
 		self.reply_time = int(reply_time)
 		# self.content = content
@@ -12,6 +12,7 @@ class Post(object):
 		self.floor_no = int(floor_no)
 		self.is_lzl = bool(is_lzl)
 		self.text_content = ""
+		self.level = level
 
 		if username == "":
 			self.username = nickname
