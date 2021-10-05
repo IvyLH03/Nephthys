@@ -502,13 +502,15 @@ class TiebaApi(object):
             if not main_json['at_list']:
                 return []
             for at_raw in main_json['at_list']:
+                print(at_raw)
                 username = at_raw['quote_user']['name']
                 if username == "": 
                     username = at_raw['quote_user']['name_show']
                 nickname = at_raw['quote_user']['name_show']
                 tid = at_raw['thread_id']
-                text=at_raw['content']
-                at_list.append([username, nickname,tid,text])
+                text = at_raw['content']
+                pid = at_raw['post_id']
+                at_list.append([username, nickname,tid,text,pid])
             return at_list
 
         except Exception as err:

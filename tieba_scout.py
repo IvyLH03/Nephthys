@@ -152,10 +152,6 @@ class TiebaScout(object):
         """
         first_check: 为True时多查几页
         """
-        if first_check:
-            thread_list = self.tapi.get_threads()+self.tapi.get_threads(2)+self.tapi.get_threads(3)
-        else:
-            thread_list =  self.tapi.get_threads()
 
         dig_list =  []
         anti_attack_list = []
@@ -167,14 +163,23 @@ class TiebaScout(object):
         at_list = self.tapi.get_at()
         for i in at_list:
             if i[0] in self.managers and i[3].count("删除") > 0:
+                self.tapi.del_post(int(i[2]),int(i[4]))
                 self.tapi.del_thread(int(i[2]))
-                at_del_list.append([i[0], i[2]],"删除")
+                at_del_list.append((i[0], i[2], "删除"))
             elif (i[0] in self.managers or i[0] in self.answerers) and i[3].count("屏蔽") > 0:
+                self.tapi.del_post(int(i[2]),int(i[4]))
                 self.tapi.block_thread(int(i[2]))
-                at_del_list.append([i[0], i[2]],"屏蔽")
+                at_del_list.append((i[0], i[2], "屏蔽"))
+
+        # 获取首页帖子
+        if first_check:
+            thread_list = self.tapi.get_threads()+self.tapi.get_threads(2)+self.tapi.get_threads(3)
+        else:
+            thread_list =  self.tapi.get_threads()
 
         for thread in thread_list:
 
+            # 根据关键词自动删帖
             if thread.content.count("返利") > 0 or thread.content.count("充值") > 0 or thread.content.count("充直") > 0:
                 self.tapi.del_thread(thread.tid)
                 auto_del_list.append(thread)
@@ -187,45 +192,47 @@ class TiebaScout(object):
                     continue
                 last_round_reply_time = self.dig_record[thread.tid][1]
 
+            try:
+                post_list = self.tapi.get_posts(thread.tid)
+                post_list = sorted(post_list, key=attrgetter('reply_time'), reverse=True) # 从最晚回复到最早回复排序
 
-            post_list = self.tapi.get_posts(thread.tid)
-            post_list = sorted(post_list, key=attrgetter('reply_time'), reverse=True) # 从最晚回复到最早回复排序
+                for i in post_list:
+                    if i.reply_time <= last_round_reply_time:
+                        break
+                    # 处理吧务删帖申请
+                    if (i.username in self.managers):
+                        if i.content == ".删除":
+                            self.tapi.del_thread(thread.tid)
+                            at_del_list.append((i.username, thread.tid, "删除"))
+                        elif i.content == ".屏蔽":
+                            self.tapi.block_thread(thread.tid)
+                            self.tapi.del_post(thread.tid, i.pid)
+                            at_del_list.append((i.username, thread.tid, "屏蔽"))
 
-            for i in post_list:
-                if i.reply_time <= last_round_reply_time:
-                    break
-                # 处理吧务删帖申请
-                if (i.username in self.managers):
-                    if i.content == ".删除":
-                        self.tapi.del_thread(thread.tid)
-                        at_del_list.append((i.username, thread.tid, "删除"))
-                    elif i.content == ".屏蔽":
-                        self.tapi.block_thread(thread.tid)
-                        self.tapi.del_post(thread.tid, i.pid)
-                        at_del_list.append((i.username, thread.tid, "屏蔽"))
-
-            # 处理坟帖
-            # 判断记录中的坟帖状态
-            was_tomb = self.get_tomb_status(thread.tid)
-            # 获取挖坟回复列表
-            thread_dig_list = self.judge_tomb_digging(thread,post_list)
-            if len(thread_dig_list) != 0:
-                if thread_dig_list != ["疑似挖坟秒删"]:
-                # 如果之前就是坟帖，自动封禁
-                    if was_tomb:
-                        for dig in thread_dig_list.copy():
-                            if dig.username == thread.username:
-                                continue
-                            self.tapi.ban_id(dig.portrait,1,"挖坟（在坟帖《"+thread.title+"》下）")
-                            auto_solved_dig_list.append((thread, dig))
-                            thread_dig_list.remove(dig)
-                # 防爆吧
-                    else:
-                        anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid)
-                        anti_attack_list += anti_attack_result_list
-                # 报告挖坟情况
-                if len(thread_dig_list) > 0:
-                    dig_list.append((thread, thread_dig_list))
+                # 处理坟帖
+                # 判断记录中的坟帖状态
+                was_tomb = self.get_tomb_status(thread.tid)
+                # 获取挖坟回复列表
+                thread_dig_list = self.judge_tomb_digging(thread,post_list)
+                if len(thread_dig_list) != 0:
+                    if thread_dig_list != ["疑似挖坟秒删"]:
+                    # 如果之前就是坟帖，自动封禁
+                        if was_tomb:
+                            for dig in thread_dig_list.copy():
+                                if dig.username == thread.username:
+                                    continue
+                                self.tapi.ban_id(dig.portrait,1,"挖坟（在坟帖《"+thread.title+"》下）")
+                                auto_solved_dig_list.append((thread, dig))
+                                thread_dig_list.remove(dig)
+                    # 防爆吧
+                        else:
+                            anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid)
+                            anti_attack_list += anti_attack_result_list
+                    # 报告挖坟情况
+                    if len(thread_dig_list) > 0:
+                        dig_list.append((thread, thread_dig_list))
+            except Exception as e:
+                print(str(e))
  
 
    
