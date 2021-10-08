@@ -178,7 +178,9 @@ class TiebaScout(object):
             thread_list =  self.tapi.get_threads()
 
         for thread in thread_list:
-
+            # 跳过贴吧活动帖
+            if thread.tid == 7559254857:
+                continue
             # 根据关键词自动删帖
             if thread.content.count("返利") > 0 or thread.content.count("充值") > 0 or thread.content.count("充直") > 0:
                 self.tapi.del_thread(thread.tid)
