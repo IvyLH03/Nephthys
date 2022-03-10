@@ -111,7 +111,7 @@ class TiebaApi(object):
 
             info_dict = main_json['data']
             username = info_dict.get('name', '')
-            nickname = info_dict.get('name_show', '')
+            nickname = info_dict.get('show_nickname', '')
             user_id = info_dict.get('id', None)
             portrait = info_dict['portrait']
 
@@ -371,8 +371,7 @@ class TiebaApi(object):
         first_floor = main_json['post_list'][0]
         user = main_json['user_list'][0]
 
-
-        return Thread(tid,first_floor['title'], main_json['thread']['origin_thread_info']['abstract'],first_floor['time'],0,main_json['thread']['reply_num'],user['name'],user['name_show'],user['portrait'])
+        return Thread(tid,first_floor['title'], first_floor['content'],first_floor['time'],0,main_json['thread']['reply_num'],user['name'],user['name_show'],user['portrait'])
     
     def reply_thread(self,tid,content):
         """
@@ -518,3 +517,40 @@ class TiebaApi(object):
         
         return []
 
+    def recover(self, tid, pid=0, is_frs_mask=False):
+        """
+        恢复帖子
+        recover(tid,pid=0)
+        参数:
+            tid: int 回复所在的主题帖tid
+            pid: int 待恢复的回复pid
+            is_frs_mask: bool False则恢复删帖，True则取消屏蔽帖，默认为False
+        返回值:
+            flag: bool 操作是否成功
+        """
+
+        payload = {'fn': self.tieba_name,
+                    'fid': self.fid,
+                    'tid_list[]': tid,
+                    'pid_list[]': pid,
+                    'type_list[]': 1 if pid else 0,
+                    'is_frs_mask_list[]': int(is_frs_mask)
+                    }
+
+        try:
+        
+            res = self.web.post(
+                "https://tieba.baidu.com/mo/q/bawurecoverthread", data=payload, timeout=(3, 10))
+
+            if res.status_code != 200:
+                raise ValueError("status code is not 200")
+
+            main_json = res.json()
+            if int(main_json['no']):
+                raise ValueError(main_json['error'])
+
+        except Exception as err:
+            print("Failed to recover tid:{tid} pid:{pid}. reason:{err}")
+            return False
+
+        return True

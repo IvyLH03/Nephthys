@@ -6,6 +6,7 @@ from operator import attrgetter
 import time
 import os
 import functools
+import re
 
 class TiebaScout(object):
     def __init__(self, BDUSS, STOKEN, tieba_name, *args, **kwargs):
@@ -48,6 +49,8 @@ class TiebaScout(object):
         self.managers = config["Managers"]
         self.answerers = config["Answerers"]
         self.sealing_keywords = ["坟"]
+        self.adPostKeyword = config["AdPostKeyword"]
+        self.adThreadKeyword = config["AdThreadKeyword"]
 
     def save_records(self):
         """
@@ -65,6 +68,10 @@ class TiebaScout(object):
                     s += "1)"
                 s += str(self.dig_record[i][1])+":"+str(self.dig_record[i][2])+"\n"
                 f.write(s)
+        config["AdPostKeyword"] = self.adPostKeyword
+        config["AdThreadKeyword"] = self.adThreadKeyword
+        with open("config.json","r",encoding="utf-8") as f:
+            config = json.load(f)
 
 
 
@@ -166,6 +173,15 @@ class TiebaScout(object):
                 self.tapi.del_post(int(i[2]),int(i[4]))
                 self.tapi.del_thread(int(i[2]))
                 at_del_list.append((i[0], i[2], "删除"))
+            elif i[0] in self.managers and i[3].count("删封10天") > 0:
+                self.tapi.ban_id(self.tapi.get_thread(int(i[2])).portrait, 10, "广告")
+                self.tapi.del_post(int(i[2]),int(i[4]))
+                self.tapi.del_thread(int(i[2]))
+                at_del_list.append((i[0], i[2], "删封10天"))
+            elif i[0] in self.managers and i[3].count("解除屏蔽") > 0:
+                self.tapi.del_post(int(i[2]),int(i[4]))
+                self.tapi.recover(int(i[2]), is_frs_mask=True)
+                at_del_list.append((i[0], i[2], "解除屏蔽"))
             elif (i[0] in self.managers or i[0] in self.answerers) and i[3].count("屏蔽") > 0:
                 self.tapi.del_post(int(i[2]),int(i[4]))
                 self.tapi.block_thread(int(i[2]))
@@ -179,10 +195,11 @@ class TiebaScout(object):
 
         for thread in thread_list:
             # 跳过贴吧活动帖
-            if thread.tid == 7559254857:
+            if thread.tid == 7559254857 or thread.tid == 7569495155:
                 continue
+
             # 根据关键词自动删帖
-            if thread.content.count("返利") > 0 or thread.content.count("充值") > 0 or thread.content.count("充直") > 0:
+            if re.search(self.adThreadKeyword,thread.content):
                 self.tapi.del_thread(thread.tid)
                 auto_del_list.append(thread)
                 continue
@@ -210,6 +227,10 @@ class TiebaScout(object):
                             self.tapi.block_thread(thread.tid)
                             self.tapi.del_post(thread.tid, i.pid)
                             at_del_list.append((i.username, thread.tid, "屏蔽"))
+                    # 关键词删回复
+                    if re.search(self.adPostKeyword, i.content):
+                        self.tapi.del_post(thread.tid, i.pid)
+                        auto_del_list.append((thread, i))
 
                 # 处理坟帖
                 # 判断记录中的坟帖状态
@@ -218,18 +239,9 @@ class TiebaScout(object):
                 thread_dig_list = self.judge_tomb_digging(thread,post_list)
                 if len(thread_dig_list) != 0:
                     if thread_dig_list != ["疑似挖坟秒删"]:
-                    # 如果之前就是坟帖，自动封禁
-                        if was_tomb:
-                            for dig in thread_dig_list.copy():
-                                if dig.username == thread.username:
-                                    continue
-                                self.tapi.ban_id(dig.portrait,1,"挖坟（在坟帖《"+thread.title+"》下）")
-                                auto_solved_dig_list.append((thread, dig))
-                                thread_dig_list.remove(dig)
                     # 防爆吧
-                        else:
-                            anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid)
-                            anti_attack_list += anti_attack_result_list
+                        anti_attack_result_list = self.anti_attack(thread_dig_list, thread.username, thread.tid)
+                        anti_attack_list += anti_attack_result_list
                     # 报告挖坟情况
                     if len(thread_dig_list) > 0:
                         dig_list.append((thread, thread_dig_list))
