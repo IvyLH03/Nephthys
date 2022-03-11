@@ -45,12 +45,12 @@ class TiebaScout(object):
                     break
 
         with open("config.json","r",encoding="utf-8") as f:
-            config = json.load(f)
-        self.managers = config["Managers"]
-        self.answerers = config["Answerers"]
+            self.config = json.load(f)
+        self.managers = self.config["Managers"]
+        self.answerers = self.config["Answerers"]
         self.sealing_keywords = ["坟"]
-        self.adPostKeyword = config["AdPostKeyword"]
-        self.adThreadKeyword = config["AdThreadKeyword"]
+        self.adPostKeyword = self.config["AdPostKeyword"]
+        self.adThreadKeyword = self.config["AdThreadKeyword"]
 
     def save_records(self):
         """
@@ -68,10 +68,10 @@ class TiebaScout(object):
                     s += "1)"
                 s += str(self.dig_record[i][1])+":"+str(self.dig_record[i][2])+"\n"
                 f.write(s)
-        config["AdPostKeyword"] = self.adPostKeyword
-        config["AdThreadKeyword"] = self.adThreadKeyword
-        with open("config.json","r",encoding="utf-8") as f:
-            config = json.load(f)
+        self.config["AdPostKeyword"] = self.adPostKeyword
+        self.config["AdThreadKeyword"] = self.adThreadKeyword
+        with open("config.json","w",encoding="utf-8") as f:
+            json.dump(self.config,f)
 
 
 

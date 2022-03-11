@@ -173,13 +173,17 @@ async def groupMessage(app: GraiaMiraiApplication, group: Group, member: Member,
                     await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.解封：圆号与游走球”")]))
             elif msg.startswith(".添加广告回复关键词"):
                 try:
-                    tscout.adPostKeyword += msg[msg.find("：")+1:]
+                    tscout.adPostKeyword += "|" + msg[msg.find("：")+1:]
                     await app.sendGroupMessage(group, MessageChain.create([Plain("添加成功")]))
                 except Exception as err:
                     print(err)
                     await app.sendGroupMessage(group, MessageChain.create([Plain("失败：格式有误\n格式示例：“.添加广告回复关键词：摆度网盘”")]))
             elif msg.startswith(".广告回复关键词"):
-                await app.sendGroupMessage(group, MessageChain.create([Plain("当前广告回复关键词：\n"+tscout.adPostKeyword)]))
+                s = "当前广告回复关键词："
+                lst = tscout.adPostKeyword.split("|")
+                for keyword in lst:
+                    s += "\n" + keyword
+                await app.sendGroupMessage(group, MessageChain.create([Plain(s)]))
             
     elif group.id == answerer_group:
         pass
